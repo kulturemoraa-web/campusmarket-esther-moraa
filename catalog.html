@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalog | CampusMarket</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header"><div class="header-inner"><a class="brand" href="index.html">Campus<span>Market</span></a>
+<nav>
+<a href="index.html">Home</a>
+<a href="catalog.html" aria-current="page">Catalog</a>
+<a href="register.html">Register</a>
+</nav>
+</div></header>
+<main class="container"><div class="page-heading"><p class="eyebrow">Browse nearby</p><h2>Find your next useful thing.</h2><p class="lead">Everything listed below is ready for a new owner. Choose a quantity to build your order total.</p></div>
+<div class="toolbar"><div class="search-wrap"><label class="sr-only" for="search">Search catalog</label><input id="search" type="search" placeholder="Search by item name" autocomplete="off"></div><div class="filters" role="group" aria-label="Filter products"><button class="filter active" data-filter="all" type="button">All</button><button class="filter" data-filter="books" type="button">Books</button><button class="filter" data-filter="other" type="button">Essentials</button></div></div>
+<div class="catalog-layout"><section id="list" aria-live="polite">
+<article class="prod" data-cat="books" data-name="ict notes">
+<span class="prod-type">Books</span><h3>ICT Notes</h3>
+<p class="price">Ksh <span class="p">300</span></p>
+<p>Year 1 notes, printed.</p>
+<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+</article>
+
+<article class="prod" data-cat="books" data-name="dictionary">
+<span class="prod-type">Books</span><h3>Dictionary</h3>
+<p class="price">Ksh <span class="p">500</span></p>
+<p>Oxford small size.</p>
+<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+</article>
+
+<article class="prod" data-cat="other" data-name="bucket">
+<span class="prod-type">Essentials</span><h3>Bucket</h3>
+<p class="price">Ksh <span class="p">250</span></p>
+<p>20 litres, used 1 sem.</p>
+<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+</article>
+
+<article class="prod" data-cat="other" data-name="extension">
+<span class="prod-type">Essentials</span><h3>Extension Cable</h3>
+<p class="price">Ksh <span class="p">600</span></p>
+<p>4 socket, 2m cable.</p>
+<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+</article>
+</section><aside class="cart"><h2>Your basket</h2><p>Select quantities to see your running total.</p><div class="cart-total"><span>Total</span><span>Ksh <span id="tot">0</span></span></div><button class="button checkout-button" id="checkout" type="button">Request items</button><p id="msg" role="status"></p></aside></div>
+</main>
+<footer><p>CampusMarket · A simpler way to exchange on campus</p></footer>
+<script src="app.js"></script>
+</body>
+</html>

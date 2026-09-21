@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register | CampusMarket</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header"><div class="header-inner"><a class="brand" href="index.html">Campus<span>Market</span></a>
+<nav>
+<a href="index.html">Home</a>
+<a href="catalog.html">Catalog</a>
+<a href="register.html" aria-current="page">Register</a>
+</nav>
+</div></header>
+<main class="container"><div class="page-heading"><p class="eyebrow">Stay in the loop</p><h2>Join your campus marketplace.</h2><p class="lead">Create an account to keep track of listings and connect with other students.</p></div>
+<form class="form-card" id="myForm" novalidate>
+<label class="field" for="name">Full name<input id="name" type="text" autocomplete="name" required></label>
+<label class="field" for="email">Campus email<input id="email" type="email" autocomplete="email" placeholder="you@campus.ac.ke" required></label>
+<label class="field" for="pass">Password<input id="pass" type="password" minlength="6" autocomplete="new-password" required></label>
+<label class="field" for="cpass">Confirm password<input id="cpass" type="password" minlength="6" autocomplete="new-password" required></label>
+<label class="check"><input id="show" type="checkbox"> Show passwords</label>
+<button class="button" type="submit">Create account</button><p id="out" class="message" role="status"></p>
+</form>
+</main>
+<footer><p>CampusMarket · A simpler way to exchange on campus</p></footer>
+<script src="app.js"></script>
+</body>
+</html>
