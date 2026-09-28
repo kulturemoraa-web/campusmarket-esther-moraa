@@ -16,33 +16,39 @@
 </div></header>
 <main class="container"><div class="page-heading"><p class="eyebrow">Browse nearby</p><h2>Find your next useful thing.</h2><p class="lead">Everything listed below is ready for a new owner. Choose a quantity to build your order total.</p></div>
 <div class="toolbar"><div class="search-wrap"><label class="sr-only" for="search">Search catalog</label><input id="search" type="search" placeholder="Search by item name" autocomplete="off"></div><div class="filters" role="group" aria-label="Filter products"><button class="filter active" data-filter="all" aria-pressed="true" type="button">All</button><button class="filter" data-filter="books" aria-pressed="false" type="button">Books</button><button class="filter" data-filter="other" aria-pressed="false" type="button">Essentials</button></div></div>
+<section class="gallery" aria-label="Product slideshow">
+<div class="gallery-heading"><div><p class="eyebrow">Browse the market</p><h2 id="gallery-title">ICT Notes</h2></div><span class="gallery-count" id="gallery-count" aria-live="polite">1 of 4</span></div>
+<div class="gallery-frame"><img id="gallery-image" src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Study books and notes for ICT revision"><p class="gallery-empty" id="gallery-empty" hidden>No products match your search or filter.</p><div class="gallery-controls"><button class="gallery-control" id="gallery-prev" type="button" aria-label="Show previous product">&#8592;</button><button class="gallery-control" id="gallery-next" type="button" aria-label="Show next product">&#8594;</button></div></div>
+<p class="gallery-caption" id="gallery-caption">Year 1 notes, printed.</p>
+</section>
 <div class="catalog-layout"><section id="list" aria-live="polite">
-<article class="prod" data-cat="books" data-name="ict notes">
-<span class="prod-type">Books</span><h3>ICT Notes</h3>
+<p class="empty" id="catalog-empty" hidden>No items match that search. Try another name or category.</p>
+<article class="prod" data-cat="books" data-name="ict notes" data-image="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" data-image-alt="Study books and notes for ICT revision">
+<span class="prod-type">Books</span><img class="prod-image" src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Study books and notes for ICT revision" loading="lazy" decoding="async"><h3>ICT Notes</h3>
 <p class="price">Ksh <span class="p">300</span></p>
-<p>Year 1 notes, printed.</p>
-<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+<p class="description">Year 1 notes, printed.</p>
+<label class="quantity">Quantity <input class="q" type="text" inputmode="numeric" autocomplete="off" aria-describedby="qty-error-ict"></label><p class="quantity-error" id="qty-error-ict" aria-live="polite"></p>
 </article>
 
-<article class="prod" data-cat="books" data-name="dictionary">
-<span class="prod-type">Books</span><h3>Dictionary</h3>
+<article class="prod" data-cat="books" data-name="dictionary" data-image="https://upload.wikimedia.org/wikipedia/commons/6/6f/Oxford_English_Dictionary_2nd.jpg" data-image-alt="Cover of the Oxford English Dictionary, second edition">
+<span class="prod-type">Books</span><img class="prod-image" src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Oxford_English_Dictionary_2nd.jpg" alt="Cover of the Oxford English Dictionary, second edition" loading="lazy" decoding="async"><h3>Dictionary</h3>
 <p class="price">Ksh <span class="p">500</span></p>
-<p>Oxford small size.</p>
-<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+<p class="description">Oxford small size.</p>
+<label class="quantity">Quantity <input class="q" type="text" inputmode="numeric" autocomplete="off" aria-describedby="qty-error-dictionary"></label><p class="quantity-error" id="qty-error-dictionary" aria-live="polite"></p>
 </article>
 
-<article class="prod" data-cat="other" data-name="bucket">
-<span class="prod-type">Essentials</span><h3>Bucket</h3>
+<article class="prod" data-cat="other" data-name="bucket" data-image="https://upload.wikimedia.org/wikipedia/commons/2/24/Purple_plastic_bucket.jpg" data-image-alt="Purple plastic bucket for carrying and storing water" data-image-fit="contain">
+<span class="prod-type">Essentials</span><img class="prod-image image-contain" src="https://upload.wikimedia.org/wikipedia/commons/2/24/Purple_plastic_bucket.jpg" alt="Purple plastic bucket for carrying and storing water" loading="lazy" decoding="async"><h3>Bucket</h3>
 <p class="price">Ksh <span class="p">250</span></p>
-<p>20 litres, used 1 sem.</p>
-<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+<p class="description">20 litres, used 1 sem.</p>
+<label class="quantity">Quantity <input class="q" type="text" inputmode="numeric" autocomplete="off" aria-describedby="qty-error-bucket"></label><p class="quantity-error" id="qty-error-bucket" aria-live="polite"></p>
 </article>
 
-<article class="prod" data-cat="other" data-name="extension">
-<span class="prod-type">Essentials</span><h3>Extension Cable</h3>
+<article class="prod" data-cat="other" data-name="extension cable" data-image="https://upload.wikimedia.org/wikipedia/commons/a/ae/NEMA-1_extension_cord.jpg" data-image-alt="A standard household extension cord with plug and sockets">
+<span class="prod-type">Essentials</span><img class="prod-image" src="https://upload.wikimedia.org/wikipedia/commons/a/ae/NEMA-1_extension_cord.jpg" alt="A standard household extension cord with plug and sockets" loading="lazy" decoding="async"><h3>Extension Cable</h3>
 <p class="price">Ksh <span class="p">600</span></p>
-<p>4 socket, 2m cable.</p>
-<label class="quantity">Quantity <input class="q" type="number" value="0" min="0" max="20" inputmode="numeric"></label>
+<p class="description">4 socket, 2m cable.</p>
+<label class="quantity">Quantity <input class="q" type="text" inputmode="numeric" autocomplete="off" aria-describedby="qty-error-extension"></label><p class="quantity-error" id="qty-error-extension" aria-live="polite"></p>
 </article>
 </section><aside class="cart"><h2>Your basket</h2><p id="cart-empty">Choose quantities to add items to your basket.</p><ul class="cart-items" id="cart-items" aria-label="Selected items" aria-live="polite"></ul><div class="cart-total"><span>Total</span><span>Ksh <span id="tot">0</span></span></div><button class="button checkout-button" id="checkout" type="button">Request items</button><p id="msg" role="status"></p></aside></div>
 </main>
