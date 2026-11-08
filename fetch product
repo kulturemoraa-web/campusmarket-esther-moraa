@@ -1,0 +1,30 @@
+async function loadProducts() {
+    const loading = document.getElementById("loading-message");
+    const fetchError = document.getElementById("fetch-error");
+
+    try {
+        loading.hidden = false;
+
+        const response = await fetch("products.json");
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch products");
+        }
+
+        const products = await response.json();
+
+        allProducts = products;
+        filteredProducts = [...products];
+
+        renderProducts(filteredProducts);
+
+        loading.hidden = true;
+
+    } catch (error) {
+
+        console.error(error);
+
+        loading.hidden = true;
+        fetchError.hidden = false;
+    }
+}
