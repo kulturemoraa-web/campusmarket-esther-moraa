@@ -1,253 +1,552 @@
-const products = document.querySelectorAll('.prod');
-const search = document.getElementById('search');
-let activeFilter = 'all';
-let galleryIndex = 0;
+/* ==========================================================================
+   app.js — CampusMarket catalog (Assignment 5: live data and full integration)
+   --------------------------------------------------------------------------
+   Order of operations from page load to catalog on screen:
+     1. The page loads and start() runs; "Loading products..." is shown.
+     2. loadCatalog() calls fetch("products.json")        -> a Promise
+     3. await pauses until the response arrives
+     4. response.ok is checked (a 404 does not throw on its own)
+     5. await response.json() parses the body into an array
+     6. The array is stored in state.products and applyFilters() runs
+     7. renderCards() builds the cards with DOM methods; the gallery follows
+   If anything in steps 2-5 fails, the catch block shows a clear message and a
+   "Try again" button. Navigation, styling and the rest of the page keep working.
+   ========================================================================== */
 
-function getVisibleProducts() {
-  return [...products].filter((product) => !product.hidden);
-}
+(function () {
+  "use strict";
 
-function updateGallery() {
-  const galleryProducts = getVisibleProducts();
-  const image = document.getElementById('gallery-image');
-  const empty = document.getElementById('gallery-empty');
-  const title = document.getElementById('gallery-title');
-  const caption = document.getElementById('gallery-caption');
-  const count = document.getElementById('gallery-count');
-  const previous = document.getElementById('gallery-prev');
-  const next = document.getElementById('gallery-next');
-  if (!image) return;
+  var DATA_URL = "products.json";
+  var MAX_QTY = 10;
 
-  const hasProducts = galleryProducts.length > 0;
-  image.hidden = !hasProducts;
-  if (empty) empty.hidden = hasProducts;
-  if (previous) previous.disabled = !hasProducts;
-  if (next) next.disabled = !hasProducts;
-  if (!hasProducts) {
-    if (title) title.textContent = 'No matching items';
-    if (caption) caption.textContent = 'Change your search or category filter to browse products.';
-    if (count) count.textContent = '0 of 0';
-    return;
+  var state = {
+    products: [],      // the array that came back from fetch (never hardcoded)
+    category: "all",
+    query: "",
+    ready: false,
+    loading: false,
+    quantities: {},    // product id -> whole number requested
+    galleryIndex: 0,
+    matched: []        // what the filter currently matches (grid + gallery)
+  };
+
+  var el = {};
+
+  function byId(id) {
+    return document.getElementById(id);
   }
 
-  galleryIndex = ((galleryIndex % galleryProducts.length) + galleryProducts.length) % galleryProducts.length;
-  const product = galleryProducts[galleryIndex];
-  image.src = product.dataset.image;
-  image.alt = product.dataset.imageAlt;
-  image.classList.toggle('dictionary-cover', product.dataset.name === 'dictionary');
-  image.classList.toggle('image-contain', product.dataset.imageFit === 'contain');
-  if (title) title.textContent = product.querySelector('h3').textContent.trim();
-  if (caption) caption.textContent = product.querySelector('.description').textContent.trim();
-  if (count) count.textContent = `${galleryIndex + 1} of ${galleryProducts.length}`;
-}
+  /* ---- 1. Loading data ---------------------------------------------------- */
 
-function updateCatalog() {
-  if (!search) return;
-  const query = search.value.trim().toLowerCase();
-  products.forEach((product) => {
-    const matchesFilter = activeFilter === 'all' || product.dataset.cat === activeFilter;
-    const searchableText = `${product.dataset.name} ${product.querySelector('.description').textContent} ${product.dataset.cat}`.toLowerCase();
-    const matchesSearch = searchableText.includes(query);
-    product.hidden = !(matchesFilter && matchesSearch);
-  });
-  galleryIndex = 0;
-  const empty = document.getElementById('catalog-empty');
-  if (empty) empty.hidden = getVisibleProducts().length > 0;
-  updateGallery();
-}
+  async function fetchProducts() {
+    var response = await fetch(DATA_URL);
 
-function validateQuantity(input, showError = false) {
-  const error = document.getElementById(input.getAttribute('aria-describedby'));
-  const value = input.value.trim();
-  let message = '';
-  let quantity = null;
-
-  if (!value) {
-    if (showError) message = 'Quantity is required. Enter a whole number from 1 to 20.';
-  } else if (!/^\d+$/.test(value)) {
-    message = 'Quantity must be a whole number from 1 to 20.';
-  } else {
-    quantity = Number(value);
-    if (quantity < 1) {
-      message = 'Quantity must be at least 1.';
-      quantity = null;
-    } else if (quantity > 20) {
-      message = 'Quantity cannot exceed 20.';
-      quantity = null;
-    }
-  }
-
-  input.setAttribute('aria-invalid', String(Boolean(message)));
-  if (error) {
-    error.textContent = message;
-    error.classList.toggle('is-visible', Boolean(message));
-  }
-  return quantity;
-}
-
-function getPrice(product) {
-  return Number(product.querySelector('.p').textContent.replaceAll(',', ''));
-}
-
-function updateCart() {
-  const cartItems = document.getElementById('cart-items');
-  const emptyMessage = document.getElementById('cart-empty');
-  const message = document.getElementById('msg');
-  const entries = [];
-  let total = 0;
-
-  if (cartItems) cartItems.replaceChildren();
-  products.forEach((product) => {
-    const input = product.querySelector('.q');
-    const quantity = validateQuantity(input, input.dataset.touched === 'true');
-    if (!quantity) return;
-
-    const lineTotal = getPrice(product) * quantity;
-    total += lineTotal;
-    entries.push({ product, quantity, lineTotal });
-
-    if (cartItems) {
-      const item = document.createElement('li');
-      const label = document.createElement('span');
-      const price = document.createElement('strong');
-      item.className = 'cart-item';
-      label.textContent = `${product.querySelector('h3').textContent.trim()} x ${quantity}`;
-      price.textContent = `Ksh ${lineTotal.toLocaleString()}`;
-      item.append(label, price);
-      cartItems.append(item);
-    }
-  });
-
-  if (emptyMessage) emptyMessage.hidden = entries.length > 0;
-  const totalElement = document.getElementById('tot');
-  if (totalElement) totalElement.textContent = total.toLocaleString();
-  if (message && message.classList.contains('error')) {
-    message.textContent = '';
-    message.classList.remove('is-visible', 'error');
-  }
-  return entries;
-}
-
-document.querySelectorAll('.filter').forEach((button) => button.addEventListener('click', () => {
-  activeFilter = button.dataset.filter;
-  document.querySelectorAll('.filter').forEach((item) => {
-    const isActive = item === button;
-    item.classList.toggle('active', isActive);
-    item.setAttribute('aria-pressed', String(isActive));
-  });
-  updateCatalog();
-}));
-if (search) search.addEventListener('input', updateCatalog);
-document.querySelectorAll('.q').forEach((input) => {
-  input.addEventListener('input', () => {
-    input.dataset.touched = 'true';
-    updateCart();
-  });
-  input.addEventListener('blur', () => {
-    input.dataset.touched = 'true';
-    updateCart();
-  });
-});
-const galleryPrevious = document.getElementById('gallery-prev');
-const galleryNext = document.getElementById('gallery-next');
-if (galleryPrevious) galleryPrevious.addEventListener('click', () => {
-  galleryIndex -= 1;
-  updateGallery();
-});
-if (galleryNext) galleryNext.addEventListener('click', () => {
-  galleryIndex += 1;
-  updateGallery();
-});
-updateCatalog();
-updateCart();
-const checkout = document.getElementById('checkout');
-if (checkout) checkout.addEventListener('click', () => {
-  const message = document.getElementById('msg');
-  const entries = updateCart();
-  const hasInvalidTouchedField = [...document.querySelectorAll('.q')].some((input) => input.dataset.touched === 'true' && input.getAttribute('aria-invalid') === 'true');
-  if (hasInvalidTouchedField) {
-    message.textContent = 'Fix the highlighted quantities before sending your request.';
-    message.className = 'message error is-visible';
-  } else if (entries.length === 0) {
-    message.textContent = 'Choose a quantity from 1 to 20 for at least one item.';
-    message.className = 'message error is-visible';
-  } else {
-    message.textContent = 'Request noted. A seller can confirm availability with you.';
-    message.className = 'message success is-visible';
-  }
-});
-
-const form = document.getElementById('myForm');
-const showPasswords = document.getElementById('show');
-if (showPasswords) showPasswords.addEventListener('change', () => {
-  ['pass', 'cpass'].forEach((id) => { document.getElementById(id).type = showPasswords.checked ? 'text' : 'password'; });
-});
-const registrationOutput = document.getElementById('out');
-
-function clearFieldError(input) {
-  const error = document.getElementById(input.getAttribute('aria-describedby'));
-  input.removeAttribute('aria-invalid');
-  if (error) {
-    error.textContent = '';
-    error.classList.remove('is-visible');
-  }
-}
-
-if (form) {
-  const registrationFields = ['name', 'email', 'pass', 'cpass'].map((id) => document.getElementById(id));
-  registrationFields.forEach((input) => input.addEventListener('input', () => {
-    clearFieldError(input);
-    if (registrationOutput) registrationOutput.classList.remove('is-visible');
-  }));
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const [name, email, password, confirmation] = registrationFields;
-    const errors = [];
-    const addError = (input, message) => errors.push({ input, message });
-
-    if (!name.value.trim()) addError(name, 'Enter your full name.');
-    if (!email.value.trim()) {
-      addError(email, 'Enter your campus email address.');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-      addError(email, 'Enter a valid email with an @ symbol and domain, such as you@campus.ac.ke.');
-    }
-    if (!password.value) {
-      addError(password, 'Enter a password.');
-    } else if (password.value.length < 8) {
-      addError(password, 'Password must be at least 8 characters long.');
-    }
-    if (!confirmation.value) {
-      addError(confirmation, 'Confirm your password.');
-    } else if (password.value !== confirmation.value) {
-      addError(confirmation, 'Passwords do not match.');
+    if (!response.ok) {
+      throw new Error("Request failed with status " + response.status);
     }
 
-    registrationFields.forEach(clearFieldError);
-    if (registrationOutput) registrationOutput.classList.remove('is-visible', 'error', 'success', 'is-animated');
+    var data = await response.json();
 
-    if (errors.length) {
-      errors.forEach(({ input, message }) => {
-        const error = document.getElementById(input.getAttribute('aria-describedby'));
-        input.setAttribute('aria-invalid', 'true');
-        if (error) {
-          error.textContent = message;
-          error.classList.add('is-visible');
-        }
-      });
-      if (registrationOutput) {
-        registrationOutput.textContent = `${errors[0].input.labels[0].childNodes[0].textContent.trim()}: ${errors[0].message}`;
-        registrationOutput.classList.add('error', 'is-visible');
-      }
-      errors[0].input.focus();
+    if (!Array.isArray(data)) {
+      throw new Error("products.json is not a list of products");
+    }
+
+    return data;
+  }
+
+  async function loadCatalog() {
+    if (state.loading) {
       return;
     }
 
-    if (registrationOutput) {
-      registrationOutput.textContent = 'Your details passed validation. Account creation is not connected yet.';
-      registrationOutput.classList.add('success', 'is-visible');
-      void registrationOutput.offsetWidth;
-      registrationOutput.classList.add('is-animated');
+    state.loading = true;
+    state.ready = false;
+    state.products = [];
+    showStatus("Loading products...", false);
+    hideEmpty();
+    renderCards([]);
+    renderGallery([]);
+
+    try {
+      var products = await fetchProducts();
+
+      state.products = products;
+      state.ready = true;
+      clearStatus();
+      pruneQuantities();
+      applyFilters();
+    } catch (error) {
+      state.products = [];
+      state.ready = false;
+      showError(
+        "The product list couldn't be loaded, so there is nothing to browse just yet. " +
+          "The rest of the page still works.",
+        error && error.message ? error.message : ""
+      );
+      showEmpty("No items to show while the catalog is unavailable.");
+      renderCart();
+
+      if (window.console && window.console.error) {
+        window.console.error("Catalog fetch failed:", error);
+      }
+    } finally {
+      state.loading = false;
     }
-  });
-}
+  }
+
+  /* ---- 2. Status, error and empty messages -------------------------------- */
+
+  function showStatus(message, isError) {
+    el.status.textContent = message;
+    el.status.classList.toggle("is-error", !!isError);
+    el.status.hidden = false;
+  }
+
+  function clearStatus() {
+    el.status.textContent = "";
+    el.status.classList.remove("is-error");
+    el.status.hidden = true;
+  }
+
+  function showError(message, detail) {
+    el.status.textContent = "";
+    el.status.classList.add("is-error");
+    el.status.hidden = false;
+
+    var text = document.createElement("span");
+    text.textContent = message + (detail ? " (" + detail + ") " : " ");
+
+    var retry = document.createElement("button");
+    retry.type = "button";
+    retry.id = "retry-fetch";
+    retry.className = "button";
+    retry.textContent = "Try again";
+    retry.addEventListener("click", loadCatalog);
+
+    el.status.appendChild(text);
+    el.status.appendChild(retry);
+  }
+
+  function showEmpty(message) {
+    el.empty.textContent = message;
+    el.empty.hidden = false;
+  }
+
+  function hideEmpty() {
+    el.empty.hidden = true;
+  }
+
+  function categoryLabel(category) {
+    return category === "books" ? "Books" : "Essentials";
+  }
+
+  function activeFilterLabel() {
+    var buttons = document.querySelectorAll(".filter");
+    for (var i = 0; i < buttons.length; i += 1) {
+      if (buttons[i].dataset.filter === state.category) {
+        return buttons[i].textContent.trim();
+      }
+    }
+    return "this category";
+  }
+
+  function emptyMessage() {
+    var query = state.query.trim();
+
+    if (query && state.category !== "all") {
+      return 'No items match "' + query + '" in ' + activeFilterLabel() +
+        ". Try another name, or switch back to All.";
+    }
+    if (query) {
+      return 'No items match "' + query + '". Try another item name or clear the search.';
+    }
+    return "Nothing in " + activeFilterLabel() + " right now. Try another category.";
+  }
+
+  /* ---- 3. The filter (runs on the fetched array) -------------------------- */
+
+  function filterProducts(products, category, query) {
+    var text = String(query || "").trim().toLowerCase();
+
+    return products.filter(function (product) {
+      var inCategory = category === "all" || product.category === category;
+      var matchesText = !text || product.name.toLowerCase().indexOf(text) !== -1;
+      return inCategory && matchesText;
+    });
+  }
+
+  function applyFilters() {
+    if (!state.ready) {
+      return;
+    }
+
+    state.matched = filterProducts(state.products, state.category, state.query);
+    state.galleryIndex = 0;
+
+    renderCards(state.matched);
+    renderGallery(state.matched);
+
+    if (state.matched.length === 0) {
+      showEmpty(emptyMessage());
+    } else {
+      hideEmpty();
+    }
+  }
+
+  /* ---- 4. Product cards (built with DOM methods) -------------------------- */
+
+  function buildCard(product) {
+    var card = document.createElement("article");
+    card.className = "prod";
+    card.dataset.id = product.id;
+    card.dataset.cat = product.category;
+    card.dataset.name = product.name.toLowerCase();
+
+    var type = document.createElement("span");
+    type.className = "prod-type";
+    type.textContent = categoryLabel(product.category);
+
+    var img = document.createElement("img");
+    img.className = "prod-image" + (product.imageFit === "contain" ? " image-contain" : "");
+    img.src = product.image;
+    img.alt = product.imageAlt || product.name;
+    img.loading = "lazy";
+    img.decoding = "async";
+
+    var title = document.createElement("h3");
+    title.textContent = product.name;
+
+    var price = document.createElement("p");
+    price.className = "price";
+    price.appendChild(document.createTextNode("Ksh "));
+    var amount = document.createElement("span");
+    amount.className = "p";
+    amount.textContent = product.price;
+    price.appendChild(amount);
+
+    var description = document.createElement("p");
+    description.className = "description";
+    description.textContent = product.description;
+
+    var label = document.createElement("label");
+    label.className = "quantity";
+    label.appendChild(document.createTextNode("Quantity "));
+    var input = document.createElement("input");
+    input.className = "q";
+    input.type = "text";
+    input.setAttribute("inputmode", "numeric");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("aria-describedby", "qty-error-" + product.id);
+    var saved = state.quantities[product.id] || 0;
+    input.value = saved > 0 ? String(saved) : "";
+    label.appendChild(input);
+
+    var error = document.createElement("p");
+    error.className = "quantity-error";
+    error.id = "qty-error-" + product.id;
+    error.setAttribute("aria-live", "polite");
+
+    card.appendChild(type);
+    card.appendChild(img);
+    card.appendChild(title);
+    card.appendChild(price);
+    card.appendChild(description);
+    card.appendChild(label);
+    card.appendChild(error);
+    return card;
+  }
+
+  function renderCards(products) {
+    Array.prototype.slice.call(el.list.querySelectorAll(".prod")).forEach(function (card) {
+      card.remove();
+    });
+
+    products.forEach(function (product) {
+      el.list.appendChild(buildCard(product));
+    });
+  }
+
+  /* ---- 5. Gallery (follows the filter) ------------------------------------ */
+
+  function renderGallery(items) {
+    var hasItems = items.length > 0;
+
+    el.galleryPrev.disabled = items.length < 2;
+    el.galleryNext.disabled = items.length < 2;
+
+    if (!hasItems) {
+      el.galleryTitle.textContent = state.ready ? "No products to show" : "Loading products...";
+      el.galleryCount.textContent = state.ready ? "0 of 0" : "";
+      el.galleryCaption.textContent = "";
+      el.galleryImage.hidden = true;
+      el.galleryEmpty.hidden = !state.ready;
+      return;
+    }
+
+    var item = items[state.galleryIndex];
+    el.galleryTitle.textContent = item.name;
+    el.galleryCount.textContent = state.galleryIndex + 1 + " of " + items.length;
+    el.galleryCaption.textContent = item.description;
+    el.galleryImage.src = item.image;
+    el.galleryImage.alt = item.imageAlt || item.name;
+    el.galleryImage.classList.toggle("image-contain", item.imageFit === "contain");
+    el.galleryImage.hidden = false;
+    el.galleryEmpty.hidden = true;
+  }
+
+  function stepGallery(direction) {
+    var count = state.matched.length;
+    if (count < 2) {
+      return;
+    }
+    state.galleryIndex = (state.galleryIndex + direction + count) % count;
+    renderGallery(state.matched);
+  }
+
+  /* ---- 6. Quantities, validation, basket and total ------------------------ */
+
+  function validateQuantity(raw) {
+    var text = String(raw).trim();
+
+    if (text === "") {
+      return { value: 0, error: "" };
+    }
+    if (!/^\d+$/.test(text)) {
+      return {
+        value: 0,
+        error: "Enter a whole number such as 1, 2 or 3 (no letters, decimals or minus signs)."
+      };
+    }
+
+    var number = parseInt(text, 10);
+    if (number > MAX_QTY) {
+      return { value: 0, error: "You can request at most " + MAX_QTY + " of one item." };
+    }
+    return { value: number, error: "" };
+  }
+
+  function findProduct(id) {
+    for (var i = 0; i < state.products.length; i += 1) {
+      if (state.products[i].id === id) {
+        return state.products[i];
+      }
+    }
+    return null;
+  }
+
+  function pruneQuantities() {
+    Object.keys(state.quantities).forEach(function (id) {
+      if (!findProduct(id)) {
+        delete state.quantities[id];
+      }
+    });
+    renderCart();
+  }
+
+  function setFieldError(id, input, message) {
+    var slot = byId("qty-error-" + id);
+    if (slot) {
+      slot.textContent = message;
+    }
+    if (input) {
+      if (message) {
+        input.setAttribute("aria-invalid", "true");
+      } else {
+        input.removeAttribute("aria-invalid");
+      }
+    }
+  }
+
+  function handleQuantityInput(event) {
+    var input = event.target;
+    if (!input.classList || !input.classList.contains("q")) {
+      return;
+    }
+
+    var card = input.closest(".prod");
+    if (!card) {
+      return;
+    }
+
+    var id = card.dataset.id;
+    var result = validateQuantity(input.value);
+
+    setFieldError(id, input, result.error);
+    state.quantities[id] = result.value;
+    renderCart();
+  }
+
+  function cartTotal() {
+    return Object.keys(state.quantities).reduce(function (sum, id) {
+      var product = findProduct(id);
+      return product ? sum + product.price * state.quantities[id] : sum;
+    }, 0);
+  }
+
+  function renderCart() {
+    el.cartItems.textContent = "";
+
+    var chosen = Object.keys(state.quantities).filter(function (id) {
+      return state.quantities[id] > 0 && findProduct(id);
+    });
+
+    chosen.forEach(function (id) {
+      var product = findProduct(id);
+      var qty = state.quantities[id];
+
+      var li = document.createElement("li");
+      li.className = "cart-item";
+
+      var name = document.createElement("span");
+      name.textContent = product.name + " × " + qty;
+
+      var cost = document.createElement("span");
+      cost.textContent = "Ksh " + product.price * qty;
+
+      var remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "cart-item-remove";
+      remove.dataset.id = id;
+      remove.setAttribute("aria-label", "Remove " + product.name + " from basket");
+      remove.textContent = "Remove";
+
+      li.appendChild(name);
+      li.appendChild(cost);
+      li.appendChild(remove);
+      el.cartItems.appendChild(li);
+    });
+
+    el.cartEmpty.hidden = chosen.length > 0;
+    el.total.textContent = String(cartTotal());
+  }
+
+  function removeFromCart(id) {
+    state.quantities[id] = 0;
+    setFieldError(id, null, "");
+
+    var card = el.list.querySelector('.prod[data-id="' + id + '"]');
+    if (card) {
+      var input = card.querySelector(".q");
+      if (input) {
+        input.value = "";
+        input.removeAttribute("aria-invalid");
+      }
+    }
+    renderCart();
+  }
+
+  /* ---- 7. Animated confirmation ------------------------------------------- */
+
+  function announce(message, isError) {
+    el.message.textContent = message;
+    el.message.classList.toggle("is-error", !!isError);
+
+    if (el.message.animate) {
+      el.message.animate(
+        [
+          { opacity: 0, transform: "translateY(10px) scale(0.98)" },
+          { opacity: 1, transform: "translateY(0) scale(1)" }
+        ],
+        { duration: 450, easing: "ease-out" }
+      );
+    }
+  }
+
+  function requestItems() {
+    var amount = cartTotal();
+
+    if (amount === 0) {
+      announce("Your basket is empty. Enter a quantity for at least one item first.", true);
+      return;
+    }
+
+    var count = Object.keys(state.quantities).reduce(function (sum, id) {
+      return sum + (state.quantities[id] || 0);
+    }, 0);
+
+    announce(
+      "Request sent for " + count + (count === 1 ? " item" : " items") +
+        " (Ksh " + amount + "). The sellers will contact you soon.",
+      false
+    );
+
+    state.quantities = {};
+    Array.prototype.forEach.call(el.list.querySelectorAll(".q"), function (input) {
+      input.value = "";
+      input.removeAttribute("aria-invalid");
+    });
+    Array.prototype.forEach.call(el.list.querySelectorAll(".quantity-error"), function (slot) {
+      slot.textContent = "";
+    });
+    renderCart();
+  }
+
+  /* ---- 8. Wiring ---------------------------------------------------------- */
+
+  function setUpFilters() {
+    var buttons = Array.prototype.slice.call(document.querySelectorAll(".filter"));
+
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        buttons.forEach(function (other) {
+          other.classList.remove("active");
+          other.setAttribute("aria-pressed", "false");
+        });
+
+        button.classList.add("active");
+        button.setAttribute("aria-pressed", "true");
+
+        state.category = button.dataset.filter || "all";
+        applyFilters();
+      });
+    });
+  }
+
+  function start() {
+    el.list = byId("list");
+    el.status = byId("catalog-status");
+    el.empty = byId("catalog-empty");
+    el.search = byId("search");
+    el.galleryTitle = byId("gallery-title");
+    el.galleryCount = byId("gallery-count");
+    el.galleryImage = byId("gallery-image");
+    el.galleryCaption = byId("gallery-caption");
+    el.galleryEmpty = byId("gallery-empty");
+    el.galleryPrev = byId("gallery-prev");
+    el.galleryNext = byId("gallery-next");
+    el.cartItems = byId("cart-items");
+    el.cartEmpty = byId("cart-empty");
+    el.total = byId("tot");
+    el.message = byId("msg");
+
+    setUpFilters();
+
+    el.search.addEventListener("input", function () {
+      state.query = el.search.value;
+      applyFilters();
+    });
+
+    el.galleryPrev.addEventListener("click", function () { stepGallery(-1); });
+    el.galleryNext.addEventListener("click", function () { stepGallery(1); });
+
+    el.list.addEventListener("input", handleQuantityInput);
+
+    el.cartItems.addEventListener("click", function (event) {
+      var button = event.target.closest ? event.target.closest(".cart-item-remove") : null;
+      if (button) {
+        removeFromCart(button.dataset.id);
+      }
+    });
+
+    byId("checkout").addEventListener("click", requestItems);
+
+    renderCart();
+    loadCatalog();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+})();
